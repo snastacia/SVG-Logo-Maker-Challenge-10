@@ -1,12 +1,10 @@
 const inquirer = require('inquirer');
-const svgCaptcha = require('svg-captcha');
 const fs = require('fs');
+const {Circle, Square, Triangle} = require('./lib/shapes');
 
-const shapes = ['circle', 'triangle', 'square'];
-
-inquirer
-  .prompt([
+const promptQuestions = [
     {
+      type: "input",
       name: 'text',
       message: 'Enter up to three characters for your logo:',
       validate: (input) => {
@@ -17,33 +15,44 @@ inquirer
       },
     },
     {
+      type: "input",
       name: 'textColor',
       message: 'Enter a color keyword or hexadecimal number for the text:',
     },
     {
+      type: "list",
       name: 'shape',
       message: 'Choose a shape for your logo:',
       type: 'list',
-      choices: shapes,
+      choices: ["Circle", "Square", "Triangle"],
     },
     {
+      type: "input",
       name: 'shapeColor',
       message: 'Enter a color keyword or hexadecimal number for the shape:',
     },
-  ])
-  .then((answers) => {
-    const captcha = svgCaptcha.create({
-      text: answers.text,
-      size: { width: 300, height: 200 },
-      color: answers.textColor,
-      background: answers.shapeColor,
-    });
-    const svg = captcha.data;
-    fs.writeFile('logo.svg', svg, (err) => {
-      if (err) throw err;
-      console.log('Generated logo.svg');
-    });
+  ];
+
+  function writeToFile(fileName, data) {
+    fs.writeFile(fileName, data, (err) =>
+    err ? console.log(err) : console.log('Generated logo.svg'))
+}
+
+function init() {
+
+  inquirer.prompt(promptQuestions)
+      .then(({text, textColor, shape, shapeColor }) => {
+          if (shape === 'Circle') {
+            svgShape = new Circle(shapeColor, text, textColor);
+          } else if (shape === 'Square') {
+            svgShape = new Square(shapeColor, text, textColor);
+          } else {
+            svgShape = new Triangle(shapeColor, text, textColor);
+          }
+
+      writeToFile("logo.svg", svgShape.renderSVG())
   })
-  .catch((error) => {
-    console.error(error);
-  });
+};
+
+init();
+
